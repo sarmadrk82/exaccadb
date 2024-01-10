@@ -1,0 +1,49 @@
+TASK [Collect all subnet references by region] *************************************************************************************************************************************************************
+ok: [localhost] => (item=ap-southeast-1)
+ok: [localhost] => (item=us-west-1)
+ok: [localhost] => (item=ap-southeast-2)
+
+TASK [Resolve subnet references in each region] ************************************************************************************************************************************************************
+included: /opt/EDB/TPA/platforms/aws/ec2-region-subnets.yml for localhost
+
+TASK [Resolve subnet references in each region] ************************************************************************************************************************************************************
+included: /opt/EDB/TPA/platforms/aws/vpc-subnet.yml for localhost
+included: /opt/EDB/TPA/platforms/aws/vpc-subnet.yml for localhost
+included: /opt/EDB/TPA/platforms/aws/vpc-subnet.yml for localhost
+
+TASK [Initialise ec2_region_subnets['ap-southeast-1']] *****************************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Find all subnets for vpc-0e9de84256baa323c in ap-southeast-1] ****************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Record existing subnet-ids in ap-southeast-1] ********************************************************************************************************************************************************
+
+TASK [Create new subnets in ap-southeast-1] ****************************************************************************************************************************************************************
+changed: [localhost] => (item=ap-southeast-1:vpc-0e9de84256baa323c:10.33.63.224/28)
+
+TASK [Record new subnet-ids in ap-southeast-1] *************************************************************************************************************************************************************
+ok: [localhost] => (item=ap-southeast-1:10.33.63.224/28)
+
+TASK [Initialise ec2_region_subnets['us-west-1']] **********************************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Find all subnets for vpc-0b8af19e49983b364 in us-west-1] *********************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Record existing subnet-ids in us-west-1] *************************************************************************************************************************************************************
+ok: [localhost] => (item=us-west-1:172.31.16.0/20)
+ok: [localhost] => (item=us-west-1:172.31.0.0/20)
+
+TASK [Create new subnets in us-west-1] *********************************************************************************************************************************************************************
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: botocore.exceptions.ClientError: An error occurred (InvalidSubnet.Range) when calling the CreateSubnet operation: The CIDR '10.33.200.240/28' is invalid.
+failed: [localhost] (item=us-west-1:vpc-0b8af19e49983b364:10.33.200.240/28) => {"ansible_loop_var": "item", "boto3_version": "1.23.10", "botocore_version": "1.26.10", "changed": false, "error": {"code": "InvalidSubnet.Range", "message": "The CIDR '10.33.200.240/28' is invalid."}, "item": "10.33.200.240/28", "msg": "Couldn't create subnet: An error occurred (InvalidSubnet.Range) when calling the CreateSubnet operation: The CIDR '10.33.200.240/28' is invalid.", "response_metadata": {"http_headers": {"cache-control": "no-cache, no-store", "connection": "close", "content-type": "text/xml;charset=UTF-8", "date": "Wed, 10 Jan 2024 03:50:43 GMT", "server": "AmazonEC2", "strict-transport-security": "max-age=31536000; includeSubDomains", "transfer-encoding": "chunked", "vary": "accept-encoding", "x-amzn-requestid": "d8105003-b655-4d0b-a5df-305e6269a352"}, "http_status_code": 400, "request_id": "d8105003-b655-4d0b-a5df-305e6269a352", "retry_attempts": 0}}
+
+PLAY RECAP *************************************************************************************************************************************************************************************************
+localhost                  : ok=110  changed=5    unreachable=0    failed=1    skipped=42   rescued=0    ignored=0
+
+
+real	0m43.412s
+user	0m20.861s
+sys	0m4.374s
+ubuntu@ip-172-31-16-234:~$

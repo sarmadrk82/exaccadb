@@ -1,0 +1,168 @@
+---
+architecture: PGD-Always-ON
+cluster_name: democluster
+cluster_tags:
+  Owner : radhaaws1
+
+cluster_rules:
+  - cidr_ip: 0.0.0.0/0
+    from_port: 22
+    proto: tcp
+    to_port: 22
+  - cidr_ip: 10.33.90.48/28
+    from_port: 0
+    proto: tcp
+    to_port: 65535
+  - cidr_ip: 10.33.114.64/28
+    from_port: 0
+    proto: tcp
+    to_port: 65535
+  - cidr_ip: 10.33.193.64/28
+    from_port: 0
+    proto: tcp
+    to_port: 65535
+
+
+ec2_ami:
+  Name: debian-10-amd64-20230601-1398
+  Owner: '136693071363'
+ec2_instance_reachability: public
+ec2_vpc:
+  ap-southeast-1:
+    Name: Test
+    cidr: 10.33.0.0/16
+
+cluster_vars:
+  apt_repository_list: []
+  bdr_database: bdrdb
+  bdr_node_group: democluster
+  bdr_node_groups:
+    - name: democluster
+    - name: cons_subgroup
+      options:
+        enable_proxy_routing: true
+        enable_raft: true
+      parent_group_name: democluster
+    - name: corp_subgroup
+      options:
+        enable_proxy_routing: true
+        enable_raft: true
+      parent_group_name: democluster
+
+  bdr_version: '5'
+  default_pgd_proxy_options:
+    listen_port: 6432
+  edb_repositories:
+    - enterprise
+    - postgres_distributed
+  enable_pg_backup_api: false
+  epas_redwood_compat: true
+  failover_manager: pgd
+  postgres_coredump_filter: '0xff'
+  postgres_flavour: epas
+  postgres_version: '15'
+  preferred_python_version: python3
+  use_volatile_subscriptions: false
+  yum_repository_list:
+    - EPEL
+  bdr_commit_scopes:
+    - name: cons_scope
+      origin: cons_subgroup
+      rule: 'ANY 2 (cons_subgroup) SYNCHRONOUS_COMMIT'
+    - name: corp_scope
+      origin: corp_subgroup
+      rule: 'ANY 2 (corp_subgroup) SYNCHRONOUS_COMMIT'
+locations:
+  - Name: sghall1
+    az: ap-southeast-1a
+    region: ap-southeast-1
+    subnet: 10.33.63.224/28
+  - Name: sghall2
+    az: ap-southeast-2a
+    region: ap-southeast-2
+    subnet: 10.33.185.80/28
+  - Name: myhall
+    az: us-west-1a
+    region: us-west-1
+    subnet: 10.33.200.240/28
+
+instance_defaults:
+  default_volumes:
+    - device_name: root
+      encrypted: true
+      volume_size: 16
+      volume_type: gp2
+    - device_name: /dev/sdf
+      encrypted: true
+      vars:
+        volume_for: postgres_data
+      volume_size: 64
+      volume_type: gp2
+  platform: aws
+  type: t3.micro
+  vars:
+    ansible_user: admin
+
+instances:
+  - Name: nodea1
+    location: sghall1
+    node: 1
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: cons_subgroup
+      bdr_node_options:
+        route_priority: 100
+  - Name: nodeb1
+    location: sghall2
+    node: 2
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: cons_subgroup
+      bdr_node_options:
+        route_priority: 99
+  - Name: nodec1
+    location: myhall
+    node: 3
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: cons_subgroup
+      bdr_node_options:
+        route_priority: 98
+        route_fence: true
+  - Name: nodea2
+    location: sghall2
+    node: 4
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: corp_subgroup
+      bdr_node_options:
+        route_priority: 100
+  - Name: nodeb2
+    location: sghall1
+    node: 5
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: corp_subgroup
+      bdr_node_options:
+        route_priority: 99
+  - Name: nodec2
+    location: myhall
+    node: 6
+    role:
+      - bdr
+      - pgd-proxy
+    vars:
+      bdr_child_group: corp_subgroup
+      bdr_node_options:
+        route_priority: 98
+        route_fence: true
